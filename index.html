@@ -699,7 +699,7 @@ function renderTimer(){
   c.className='layout-wide';
   c.innerHTML=
     '<div class="progress-strip">'+strip+'</div>'+
-    '<div class="timer-meta"><span>Сессия <b>'+fmt(ts.sessionElapsed)+'</b></span><span>'+(ts.paused?'⏸ ПАУЗА':'● ИДЁТ')+'</span></div>'+
+    '<div class="timer-meta"><span>Сессия <b>'+fmt(ts.sessionElapsed)+'</b></span><span>'+(ts.paused?'[ ПАУЗА ]':'[ ИДЁТ ]')+'</span></div>'+
     '<div class="stage">'+
       '<div class="stage-tag"><span class="br">[</span> блок '+pad2(bi+1)+' / '+pad2(blocks.length)+' <span class="br">]</span></div>'+
       '<div class="stage-type" style="color:'+tp.color+'"><span class="legend-dot" style="background:'+tp.color+'"></span>'+tp.label+'</div>'+
@@ -711,12 +711,12 @@ function renderTimer(){
     '</div>'+
     '<div class="controls">'+
       '<button class="ctrl-btn" onclick="prevBlock()"'+(bi===0?' disabled':'')+'>← Пред</button>'+
-      '<button class="ctrl-btn primary" onclick="togglePause()">'+(ts.paused?'▶ Продолжить':'⏸ Пауза')+'</button>'+
+      '<button class="ctrl-btn primary" onclick="togglePause()">'+(ts.paused?'Продолжить':'Пауза')+'</button>'+
       '<button class="ctrl-btn" onclick="nextBlock()"'+(bi===blocks.length-1?' disabled':'')+'>След →</button>'+
     '</div>'+
     '<div class="queue-head">Очередь<span class="rule"></span></div>'+
     '<div class="queue">'+queue+'</div>'+
-    '<div class="stop-wrap" style="padding:0 18px 14px;"><button class="ctrl-btn" style="width:100%;border:1.5px solid var(--ink);" onclick="stopTimer()">■ Стоп · Назад к конструктору</button></div>'+
+    '<div class="stop-wrap" style="padding:0 18px 14px;"><button class="ctrl-btn" style="width:100%;border:1.5px solid var(--ink);" onclick="stopTimer()">Стоп · Назад к конструктору</button></div>'+
     footerStrip('RUN');
 }
 

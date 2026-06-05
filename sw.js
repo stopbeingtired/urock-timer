@@ -1,5 +1,5 @@
 // Service worker — offline cache for GitHub Pages
-const CACHE = 'urok-timer-v3';
+const CACHE = 'urok-timer-v4';
 const ASSETS = [
   './',
   './index.html',
