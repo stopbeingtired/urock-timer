@@ -38,6 +38,7 @@
     font-family: var(--mono);
     font-size: 12px;
     min-height: 100vh;
+    background: var(--paper);
     display: flex; justify-content: center; align-items: flex-start;
     padding: 20px 16px 40px;
     -webkit-font-smoothing: antialiased;
@@ -322,42 +323,52 @@
 
   /* ══════════ RESPONSIVE ══════════ */
 
-  /* LANDSCAPE / WIDE — две колонки */
+  /* LANDSCAPE / WIDE — две колонки, на весь экран */
   @media (min-width: 860px) and (orientation: landscape) {
-    body { align-items: center; padding: 24px; }
-    .frame { max-width: 1040px; }
+    body { align-items: stretch; padding: 0; }
+    .frame {
+      max-width: none; width: 100%; min-height: 100vh;
+      border: none; display: flex; flex-direction: column;
+    }
+    .frame::before, .frame::after { display: none; }
 
     /* масштабнее на большом экране */
-    .mast-title { font-size: 42px; }
-    .mast-clock { font-size: 24px; }
+    .mast-title { font-size: clamp(42px, 4vw, 64px); }
+    .mast-clock { font-size: clamp(24px, 2.4vw, 36px); }
 
-    /* EDITOR: блоки слева, шаблоны+итог справа */
+    .tabs { flex-shrink: 0; }
+
+    /* EDITOR: левая колонка = блоки, правая = категории+шаблоны */
     #editor-view { display: none; }
-    #editor-view.active { display: grid; grid-template-columns: 1.3fr 1fr; }
-    #editor-view > .ed-section-label:nth-of-type(1),  /* Шаблоны label */
-    #editor-view > .templates {
-      grid-column: 2;
+    #editor-view.active {
+      display: grid; flex: 1;
+      grid-template-columns: 1.25fr 1fr;
+      grid-template-rows: auto 1fr auto auto;
+      grid-template-areas:
+        "blk-lbl tpl-lbl"
+        "blocks  tpls"
+        "add     tpls"
+        "foot    foot"
+        "strip   strip";
     }
-    #editor-view > .ed-section-label:nth-of-type(2),  /* Блоки label */
-    #editor-view > .blocks-list,
-    #editor-view > .add-btn {
-      grid-column: 1;
+    #ed-blocks-label { grid-area: blk-lbl; }
+    #editor-view > .blocks-list { grid-area: blocks; align-content: start; }
+    #editor-view > .add-btn { grid-area: add; align-self: start; }
+    #ed-tpl-label { grid-area: tpl-lbl; border-left: 1.5px solid var(--ink); padding-left: 18px; }
+    #ed-tpl-zone {
+      grid-area: tpls; align-content: start;
+      border-left: 1.5px solid var(--ink);
     }
-    #editor-view > .ed-section-label:nth-of-type(2) { grid-row: 1; }
-    #editor-view > .blocks-list { grid-row: 2; }
-    #editor-view > .add-btn { grid-row: 3; align-self: start; }
-    #editor-view > .ed-section-label:nth-of-type(1) { grid-row: 1; border-left: 1.5px solid var(--ink); }
-    #editor-view > .templates { grid-row: 2; align-content: start; }
-    #editor-view > .ed-footer { grid-column: 1 / -1; grid-row: 4; }
-    #editor-view > .footer-strip { grid-column: 1 / -1; grid-row: 5; }
-    /* visual divider between columns */
-    #editor-view > .templates { border-left: 1.5px solid var(--ink); }
-    #editor-view > .ed-section-label:nth-of-type(1) { padding-left: 18px; }
+    #ed-tpl-zone .tpl-cats,
+    #ed-tpl-zone .templates { padding-left: 18px; padding-right: 18px; }
+    #editor-view > .ed-footer { grid-area: foot; }
+    #editor-view > .footer-strip { grid-area: strip; }
 
     /* TIMER: сцена слева, очередь справа */
     #timer-content.layout-wide {
-      display: grid;
+      display: grid; flex: 1;
       grid-template-columns: 1.4fr 1fr;
+      grid-template-rows: auto auto 1fr auto auto auto;
       grid-template-areas:
         "strip strip"
         "meta  meta"
@@ -368,17 +379,17 @@
     }
     #timer-content.layout-wide .progress-strip { grid-area: strip; }
     #timer-content.layout-wide .timer-meta { grid-area: meta; }
-    #timer-content.layout-wide .stage { grid-area: stage; border-right: 1.5px solid var(--ink); }
+    #timer-content.layout-wide .stage { grid-area: stage; border-right: 1.5px solid var(--ink); display: flex; flex-direction: column; justify-content: center; }
     #timer-content.layout-wide .controls { grid-area: ctrl; border-right: 1.5px solid var(--ink); }
     #timer-content.layout-wide .stop-wrap { grid-area: stop; border-right: 1.5px solid var(--ink); }
     #timer-content.layout-wide .queue-head { grid-area: queue; align-self: start; }
     #timer-content.layout-wide .queue {
       grid-area: queue; align-self: start; margin-top: 40px;
-      max-height: 100%; overflow-y: auto;
+      overflow-y: auto;
     }
     #timer-content.layout-wide .footer-strip { grid-area: foot; }
-    #timer-content.layout-wide .clock { font-size: clamp(72px, 11vw, 130px); }
-    #timer-content.layout-wide .stage-name { font-size: clamp(28px, 4vw, 44px); }
+    #timer-content.layout-wide .clock { font-size: clamp(80px, 12vw, 160px); }
+    #timer-content.layout-wide .stage-name { font-size: clamp(30px, 4vw, 56px); }
   }
 
   /* SMALL PHONES — чуть плотнее */
@@ -421,22 +432,24 @@
 
   <!-- EDITOR -->
   <div class="view active" id="editor-view">
-    <div class="ed-section-label"><span class="num">(A)</span> Шаблоны<span class="rule"></span></div>
-    <div class="tpl-cats">
-      <button class="tpl-cat active" id="cat-lesson" onclick="showCat('lesson')">Уроки</button>
-      <button class="tpl-cat" id="cat-psy" onclick="showCat('psy')">Психология</button>
-    </div>
-    <div class="templates" id="tpl-lesson">
-      <button class="tpl-btn" onclick="loadTemplate('l60')">60<small>один час</small></button>
-      <button class="tpl-btn" onclick="loadTemplate('l90')">90<small>полтора часа</small></button>
-    </div>
-    <div class="templates tpl-grid3" id="tpl-psy" style="display:none">
-      <button class="tpl-btn" onclick="loadTemplate('pg45')">45<small>группа</small></button>
-      <button class="tpl-btn" onclick="loadTemplate('pg90')">90<small>группа +</small></button>
-      <button class="tpl-btn" onclick="loadTemplate('pi50')">50<small>индив.</small></button>
+    <div class="ed-section-label" id="ed-tpl-label"><span class="num">(A)</span> Шаблоны<span class="rule"></span></div>
+    <div id="ed-tpl-zone">
+      <div class="tpl-cats">
+        <button class="tpl-cat active" id="cat-lesson" onclick="showCat('lesson')">Уроки</button>
+        <button class="tpl-cat" id="cat-psy" onclick="showCat('psy')">Психология</button>
+      </div>
+      <div class="templates" id="tpl-lesson">
+        <button class="tpl-btn" onclick="loadTemplate('l60')">60<small>один час</small></button>
+        <button class="tpl-btn" onclick="loadTemplate('l90')">90<small>полтора часа</small></button>
+      </div>
+      <div class="templates tpl-grid3" id="tpl-psy" style="display:none">
+        <button class="tpl-btn" onclick="loadTemplate('pg45')">45<small>группа</small></button>
+        <button class="tpl-btn" onclick="loadTemplate('pg90')">90<small>группа +</small></button>
+        <button class="tpl-btn" onclick="loadTemplate('pi50')">50<small>индив.</small></button>
+      </div>
     </div>
 
-    <div class="ed-section-label"><span class="num">(B)</span> Блоки занятия<span class="rule"></span></div>
+    <div class="ed-section-label" id="ed-blocks-label"><span class="num">(B)</span> Блоки занятия<span class="rule"></span></div>
     <div class="blocks-list" id="blocks-list"></div>
     <button class="add-btn" onclick="addBlock()">+ Добавить блок</button>
 
