@@ -1,0 +1,652 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>УРОК / ТАЙМЕР</title>
+<meta name="theme-color" content="#0a0a0a">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black">
+<meta name="apple-mobile-web-app-title" content="УРОК">
+<link rel="manifest" href="./manifest.webmanifest">
+<link rel="icon" type="image/svg+xml" href="./icon.svg">
+<link rel="apple-touch-icon" href="./icon-180.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700;800;900&family=Archivo+Expanded:wght@600;700;800;900&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg: #0a0a0a;
+    --paper: #f4f3ee;
+    --ink: #0a0a0a;
+    --line: #d8d6cc;
+    --line-d: #c2bfb2;
+    --muted: #8a877c;
+    --accent: #ff4d1c;        /* single restrained accent */
+    --warn: #e8a23d;
+    --mono: 'Space Mono', monospace;
+    --sans: 'Archivo', sans-serif;
+    --exp: 'Archivo Expanded', 'Archivo', sans-serif;
+  }
+
+  html, body { background: var(--bg); }
+  body {
+    color: var(--ink);
+    font-family: var(--mono);
+    font-size: 12px;
+    min-height: 100vh;
+    display: flex; justify-content: center; align-items: flex-start;
+    padding: 20px 16px 40px;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .frame {
+    width: 100%; max-width: 600px;
+    background: var(--paper);
+    border: 1.5px solid var(--ink);
+    position: relative;
+  }
+
+  /* corner ticks */
+  .frame::before, .frame::after {
+    content: ''; position: absolute; width: 8px; height: 8px;
+    border: 1.5px solid var(--ink); background: var(--paper);
+  }
+  .frame::before { top: -5px; left: -5px; }
+  .frame::after { bottom: -5px; right: -5px; }
+
+  /* ── MASTHEAD ── */
+  .masthead {
+    border-bottom: 1.5px solid var(--ink);
+    padding: 14px 18px 12px;
+    display: flex; align-items: flex-end; justify-content: space-between;
+  }
+  .mast-left { line-height: 1; }
+  .mast-title {
+    font-family: var(--exp); font-weight: 900; font-size: 34px;
+    letter-spacing: -.01em; line-height: .82;
+  }
+  .mast-title .slash { color: var(--accent); }
+  .mast-sub {
+    font-family: var(--mono); font-size: 9px; letter-spacing: .14em;
+    text-transform: uppercase; color: var(--muted); margin-top: 7px;
+  }
+  .mast-right { text-align: right; }
+  .mast-clock {
+    font-family: var(--exp); font-weight: 800; font-size: 20px; line-height: .9;
+    letter-spacing: -.01em;
+  }
+  .mast-date { font-size: 8px; letter-spacing: .1em; color: var(--muted); margin-top: 4px; }
+
+  /* ── TABS ── */
+  .tabs { display: flex; border-bottom: 1.5px solid var(--ink); }
+  .tab {
+    flex: 1; background: var(--paper); border: none;
+    border-right: 1.5px solid var(--ink);
+    font-family: var(--mono); font-size: 10px; font-weight: 700;
+    letter-spacing: .18em; text-transform: uppercase;
+    padding: 11px 0; cursor: pointer; color: var(--muted);
+    transition: all .12s;
+  }
+  .tab:last-child { border-right: none; }
+  .tab:hover { background: #ebe9e1; color: var(--ink); }
+  .tab.active { background: var(--ink); color: var(--paper); }
+
+  .view { display: none; }
+  .view.active { display: block; }
+
+  /* ── EDITOR ── */
+  .ed-section-label {
+    display: flex; align-items: center; gap: 8px;
+    padding: 14px 18px 10px;
+    font-size: 9px; letter-spacing: .16em; text-transform: uppercase; color: var(--muted);
+  }
+  .ed-section-label .num {
+    font-family: var(--exp); font-weight: 800; color: var(--ink); font-size: 11px;
+  }
+  .ed-section-label .rule { flex: 1; height: 1px; background: var(--line-d); }
+
+  .templates { display: flex; padding: 0 18px 16px; gap: 0; }
+  .tpl-grid3 { display: grid !important; grid-template-columns: 1fr 1fr 1fr; }
+  .tpl-cats { display: flex; padding: 0 18px 10px; gap: 0; }
+  .tpl-cat {
+    flex: 1; background: var(--paper); border: 1.5px solid var(--ink);
+    font-family: var(--mono); font-size: 10px; font-weight: 700;
+    letter-spacing: .14em; text-transform: uppercase; padding: 8px 0;
+    cursor: pointer; color: var(--muted); transition: all .12s;
+  }
+  .tpl-cat + .tpl-cat { border-left: none; }
+  .tpl-cat:hover { color: var(--ink); }
+  .tpl-cat.active { background: var(--ink); color: var(--paper); }
+  .tpl-btn {
+    flex: 1; background: var(--paper); border: 1.5px solid var(--ink);
+    font-family: var(--exp); font-weight: 700; font-size: 13px;
+    letter-spacing: .02em; padding: 13px 0; cursor: pointer; color: var(--ink);
+    transition: all .12s; position: relative;
+  }
+  .tpl-btn + .tpl-btn { border-left: none; }
+  .tpl-btn small { display: block; font-family: var(--mono); font-weight: 400;
+    font-size: 8px; letter-spacing: .14em; color: var(--muted); margin-top: 3px; text-transform: uppercase; }
+  .tpl-btn:hover { background: var(--ink); color: var(--paper); }
+  .tpl-btn:hover small { color: #b8b5aa; }
+
+  .blocks-list { padding: 0 18px; }
+  .block-row {
+    display: grid; grid-template-columns: 22px 1fr 64px 26px;
+    gap: 8px; align-items: stretch;
+    border-bottom: 1px solid var(--line);
+    padding: 3px 0;
+  }
+  .row-idx {
+    font-family: var(--exp); font-weight: 800; font-size: 13px;
+    color: var(--line-d); display: flex; align-items: center; justify-content: center;
+  }
+  .block-row input[type="text"] {
+    background: transparent; border: none; color: var(--ink);
+    font-family: var(--sans); font-weight: 600; font-size: 15px;
+    padding: 9px 4px; outline: none; letter-spacing: -.01em;
+  }
+  .block-row input[type="text"]::placeholder { color: var(--line-d); }
+  .dur-wrap { display: flex; align-items: center; gap: 3px; }
+  .block-row input[type="number"] {
+    width: 38px; background: transparent; border: none; color: var(--accent);
+    font-family: var(--exp); font-weight: 800; font-size: 16px; text-align: right;
+    padding: 0; outline: none; -moz-appearance: textfield;
+  }
+  .block-row input[type="number"]::-webkit-outer-spin-button,
+  .block-row input[type="number"]::-webkit-inner-spin-button { -webkit-appearance: none; }
+  .dur-unit { font-size: 8px; color: var(--muted); letter-spacing: .08em; }
+  .del-btn {
+    background: none; border: none; color: var(--line-d); cursor: pointer;
+    font-size: 17px; line-height: 1; transition: color .12s;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .del-btn:hover { color: var(--accent); }
+
+  .add-btn {
+    width: calc(100% - 36px); margin: 12px 18px 0;
+    background: var(--paper); border: 1.5px dashed var(--line-d);
+    font-family: var(--mono); font-size: 10px; font-weight: 700;
+    letter-spacing: .16em; text-transform: uppercase; padding: 11px;
+    cursor: pointer; color: var(--muted); transition: all .12s;
+  }
+  .add-btn:hover { border-color: var(--ink); border-style: solid; color: var(--ink); }
+
+  .ed-footer {
+    margin-top: 16px; border-top: 1.5px solid var(--ink);
+    display: flex; align-items: stretch;
+  }
+  .total-box {
+    flex: 1; padding: 14px 18px;
+    display: flex; align-items: baseline; gap: 10px;
+    border-right: 1.5px solid var(--ink);
+  }
+  .total-lbl { font-size: 9px; letter-spacing: .16em; text-transform: uppercase; color: var(--muted); }
+  .total-val { font-family: var(--exp); font-weight: 900; font-size: 28px; letter-spacing: -.02em; line-height: 1; }
+  .total-val .u { font-family: var(--mono); font-weight: 400; font-size: 10px; color: var(--muted); margin-left: 4px; letter-spacing: .1em; }
+  .start-btn {
+    background: var(--ink); color: var(--paper); border: none;
+    font-family: var(--exp); font-weight: 800; font-size: 14px;
+    letter-spacing: .04em; padding: 0 26px; cursor: pointer;
+    transition: background .12s; display: flex; align-items: center; gap: 8px;
+  }
+  .start-btn:hover { background: var(--accent); }
+  .start-btn .arr { font-size: 18px; }
+
+  /* ── TIMER ── */
+  #timer-content { }
+
+  .progress-strip {
+    display: flex; border-bottom: 1.5px solid var(--ink); height: 26px;
+  }
+  .ps-seg {
+    flex: var(--w); border-right: 1px solid var(--line);
+    background: var(--paper); position: relative; overflow: hidden;
+    transition: background .3s;
+  }
+  .ps-seg:last-child { border-right: none; }
+  .ps-seg.done { background: var(--ink); }
+  .ps-seg.active { background: var(--paper); }
+  .ps-seg.active .ps-fill {
+    position: absolute; top:0; left:0; height:100%;
+    background: var(--accent); transition: width .9s linear;
+  }
+  .ps-seg .ps-n {
+    position: absolute; top: 50%; left: 5px; transform: translateY(-50%);
+    font-family: var(--mono); font-size: 8px; color: var(--line-d); z-index: 2;
+  }
+  .ps-seg.done .ps-n { color: #555; }
+  .ps-seg.active .ps-n { color: var(--ink); font-weight: 700; }
+
+  .timer-meta {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 9px 18px; border-bottom: 1.5px solid var(--ink);
+    font-size: 9px; letter-spacing: .14em; text-transform: uppercase; color: var(--muted);
+  }
+  .timer-meta b { font-family: var(--exp); font-weight: 800; color: var(--ink); font-size: 11px; letter-spacing: .04em; }
+
+  .stage {
+    padding: 22px 18px 20px; position: relative;
+    border-bottom: 1.5px solid var(--ink);
+  }
+  .stage-tag {
+    font-family: var(--mono); font-size: 9px; letter-spacing: .16em;
+    text-transform: uppercase; color: var(--accent); margin-bottom: 6px;
+    display: flex; align-items: center; gap: 6px;
+  }
+  .stage-tag .br { color: var(--ink); }
+  .stage-name {
+    font-family: var(--exp); font-weight: 800; font-size: clamp(22px, 6.5vw, 36px);
+    line-height: .92; letter-spacing: -.02em; margin-bottom: 18px;
+    word-break: break-word;
+  }
+  .clock-row {
+    display: flex; align-items: flex-end; justify-content: space-between;
+  }
+  .clock {
+    font-family: var(--exp); font-weight: 900;
+    font-size: clamp(56px, 19vw, 104px); line-height: .8;
+    letter-spacing: -.04em; font-variant-numeric: tabular-nums;
+    transition: color .2s;
+  }
+  .clock.warn { color: var(--warn); }
+  .clock.urgent { color: var(--accent); animation: blink 1s steps(2,end) infinite; }
+  @keyframes blink { 50% { opacity: .35; } }
+  .clock-side { text-align: right; padding-bottom: 8px; }
+  .clock-side .of { font-size: 9px; letter-spacing: .1em; color: var(--muted); }
+  .clock-side .of b { font-family: var(--exp); font-weight: 800; font-size: 16px; color: var(--ink); display: block; }
+
+  /* controls */
+  .controls { display: flex; border-bottom: 1.5px solid var(--ink); }
+  .ctrl-btn {
+    flex: 1; background: var(--paper); border: none;
+    border-right: 1.5px solid var(--ink);
+    font-family: var(--mono); font-size: 10px; font-weight: 700;
+    letter-spacing: .12em; text-transform: uppercase; padding: 14px 4px;
+    cursor: pointer; color: var(--ink); transition: all .12s;
+  }
+  .ctrl-btn:last-child { border-right: none; }
+  .ctrl-btn:hover:not(:disabled) { background: #ebe9e1; }
+  .ctrl-btn.primary { background: var(--ink); color: var(--paper); flex: 1.6; }
+  .ctrl-btn.primary:hover { background: var(--accent); }
+  .ctrl-btn:disabled { color: var(--line-d); cursor: default; }
+
+  /* queue */
+  .queue-head {
+    padding: 12px 18px 8px; font-size: 9px; letter-spacing: .16em;
+    text-transform: uppercase; color: var(--muted);
+    display: flex; align-items: center; gap: 8px;
+  }
+  .queue-head .rule { flex: 1; height: 1px; background: var(--line-d); }
+  .queue { padding: 0 18px 18px; }
+  .queue-item {
+    display: grid; grid-template-columns: 16px 1fr auto;
+    gap: 10px; align-items: center;
+    padding: 9px 0; border-bottom: 1px solid var(--line);
+    transition: opacity .2s;
+  }
+  .queue-item:last-child { border-bottom: none; }
+  .qi-mark { font-family: var(--mono); font-size: 9px; color: var(--line-d); }
+  .queue-item.done-item { opacity: .35; }
+  .queue-item.done-item .qi-mark { color: var(--ink); }
+  .queue-item.next .qi-mark { color: var(--accent); }
+  .qi-name { font-family: var(--sans); font-weight: 600; font-size: 14px; letter-spacing: -.01em; }
+  .queue-item.done-item .qi-name { text-decoration: line-through; text-decoration-color: var(--line-d); }
+  .qi-dur { font-family: var(--mono); font-size: 11px; color: var(--muted); }
+
+  /* done */
+  .done-screen { padding: 50px 18px 44px; text-align: center; }
+  .done-mark { font-family: var(--exp); font-weight: 900; font-size: 16px; letter-spacing: .3em; color: var(--accent); margin-bottom: 14px; }
+  .done-title { font-family: var(--exp); font-weight: 900; font-size: clamp(30px,9vw,54px); line-height: .85; letter-spacing: -.03em; margin-bottom: 14px; }
+  .done-sub { font-family: var(--mono); font-size: 11px; letter-spacing: .08em; color: var(--muted); }
+  .done-sub b { color: var(--ink); }
+  .done-btn {
+    margin-top: 28px; background: var(--ink); color: var(--paper); border: none;
+    font-family: var(--mono); font-size: 10px; font-weight: 700; letter-spacing: .16em;
+    text-transform: uppercase; padding: 12px 28px; cursor: pointer; transition: background .12s;
+  }
+  .done-btn:hover { background: var(--accent); }
+
+  /* footer barcode strip */
+  .footer-strip {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 8px 18px; border-top: 1.5px solid var(--ink);
+    font-family: var(--mono); font-size: 8px; letter-spacing: .12em;
+    text-transform: uppercase; color: var(--muted);
+  }
+  .barcode { display: flex; gap: 1px; height: 12px; align-items: stretch; }
+  .barcode span { width: 1px; background: var(--ink); }
+
+  /* ══════════ RESPONSIVE ══════════ */
+
+  /* LANDSCAPE / WIDE — две колонки */
+  @media (min-width: 860px) and (orientation: landscape) {
+    body { align-items: center; padding: 24px; }
+    .frame { max-width: 1040px; }
+
+    /* масштабнее на большом экране */
+    .mast-title { font-size: 42px; }
+    .mast-clock { font-size: 24px; }
+
+    /* EDITOR: блоки слева, шаблоны+итог справа */
+    #editor-view { display: none; }
+    #editor-view.active { display: grid; grid-template-columns: 1.3fr 1fr; }
+    #editor-view > .ed-section-label:nth-of-type(1),  /* Шаблоны label */
+    #editor-view > .templates {
+      grid-column: 2;
+    }
+    #editor-view > .ed-section-label:nth-of-type(2),  /* Блоки label */
+    #editor-view > .blocks-list,
+    #editor-view > .add-btn {
+      grid-column: 1;
+    }
+    #editor-view > .ed-section-label:nth-of-type(2) { grid-row: 1; }
+    #editor-view > .blocks-list { grid-row: 2; }
+    #editor-view > .add-btn { grid-row: 3; align-self: start; }
+    #editor-view > .ed-section-label:nth-of-type(1) { grid-row: 1; border-left: 1.5px solid var(--ink); }
+    #editor-view > .templates { grid-row: 2; align-content: start; }
+    #editor-view > .ed-footer { grid-column: 1 / -1; grid-row: 4; }
+    #editor-view > .footer-strip { grid-column: 1 / -1; grid-row: 5; }
+    /* visual divider between columns */
+    #editor-view > .templates { border-left: 1.5px solid var(--ink); }
+    #editor-view > .ed-section-label:nth-of-type(1) { padding-left: 18px; }
+
+    /* TIMER: сцена слева, очередь справа */
+    #timer-content.layout-wide {
+      display: grid;
+      grid-template-columns: 1.4fr 1fr;
+      grid-template-areas:
+        "strip strip"
+        "meta  meta"
+        "stage queue"
+        "ctrl  queue"
+        "stop  queue"
+        "foot  foot";
+    }
+    #timer-content.layout-wide .progress-strip { grid-area: strip; }
+    #timer-content.layout-wide .timer-meta { grid-area: meta; }
+    #timer-content.layout-wide .stage { grid-area: stage; border-right: 1.5px solid var(--ink); }
+    #timer-content.layout-wide .controls { grid-area: ctrl; border-right: 1.5px solid var(--ink); }
+    #timer-content.layout-wide .stop-wrap { grid-area: stop; border-right: 1.5px solid var(--ink); }
+    #timer-content.layout-wide .queue-head { grid-area: queue; align-self: start; }
+    #timer-content.layout-wide .queue {
+      grid-area: queue; align-self: start; margin-top: 40px;
+      max-height: 100%; overflow-y: auto;
+    }
+    #timer-content.layout-wide .footer-strip { grid-area: foot; }
+    #timer-content.layout-wide .clock { font-size: clamp(72px, 11vw, 130px); }
+    #timer-content.layout-wide .stage-name { font-size: clamp(28px, 4vw, 44px); }
+  }
+
+  /* SMALL PHONES — чуть плотнее */
+  @media (max-width: 380px) {
+    body { padding: 12px 8px 28px; }
+    .mast-title { font-size: 28px; }
+    .stage { padding: 18px 14px; }
+    .blocks-list, .queue { padding-left: 14px; padding-right: 14px; }
+    .masthead, .timer-meta, .ed-section-label, .queue-head, .footer-strip { padding-left: 14px; padding-right: 14px; }
+  }
+
+  /* SHORT LANDSCAPE PHONES — сжать вертикаль */
+  @media (orientation: landscape) and (max-height: 480px) {
+    body { padding: 8px; align-items: flex-start; }
+    .clock { font-size: clamp(44px, 13vh, 80px); }
+    .stage { padding: 14px 18px; }
+    .stage-name { font-size: clamp(18px, 5vh, 30px); margin-bottom: 12px; }
+    .ctrl-btn { padding: 10px 4px; }
+  }
+</style>
+</head>
+<body>
+<div class="frame">
+
+  <div class="masthead">
+    <div class="mast-left">
+      <div class="mast-title"><span class="slash">/</span>УРОК</div>
+      <div class="mast-sub">Lesson Timing System — Personal</div>
+    </div>
+    <div class="mast-right">
+      <div class="mast-clock" id="live-clock">00:00</div>
+      <div class="mast-date" id="live-date">— — —</div>
+    </div>
+  </div>
+
+  <div class="tabs">
+    <button class="tab active" id="t-editor" onclick="showView('editor')">01 / Тайминг</button>
+    <button class="tab" id="t-timer" onclick="showView('timer')">02 / Таймер</button>
+  </div>
+
+  <!-- EDITOR -->
+  <div class="view active" id="editor-view">
+    <div class="ed-section-label"><span class="num">(A)</span> Шаблоны<span class="rule"></span></div>
+    <div class="tpl-cats">
+      <button class="tpl-cat active" id="cat-lesson" onclick="showCat('lesson')">Уроки</button>
+      <button class="tpl-cat" id="cat-psy" onclick="showCat('psy')">Психология</button>
+    </div>
+    <div class="templates" id="tpl-lesson">
+      <button class="tpl-btn" onclick="loadTemplate('l60')">60<small>один час</small></button>
+      <button class="tpl-btn" onclick="loadTemplate('l90')">90<small>полтора часа</small></button>
+    </div>
+    <div class="templates tpl-grid3" id="tpl-psy" style="display:none">
+      <button class="tpl-btn" onclick="loadTemplate('pg45')">45<small>группа</small></button>
+      <button class="tpl-btn" onclick="loadTemplate('pg90')">90<small>группа +</small></button>
+      <button class="tpl-btn" onclick="loadTemplate('pi50')">50<small>индив.</small></button>
+    </div>
+
+    <div class="ed-section-label"><span class="num">(B)</span> Блоки занятия<span class="rule"></span></div>
+    <div class="blocks-list" id="blocks-list"></div>
+    <button class="add-btn" onclick="addBlock()">+ Добавить блок</button>
+
+    <div class="ed-footer">
+      <div class="total-box">
+        <span class="total-lbl">Итого</span>
+        <span class="total-val" id="total-val">0<span class="u">мин</span></span>
+      </div>
+      <button class="start-btn" onclick="startTimer()">Запустить<span class="arr">→</span></button>
+    </div>
+
+    <div class="footer-strip">
+      <span>SHRIMP-GRID / v2</span>
+      <div class="barcode" id="barcode1"></div>
+    </div>
+  </div>
+
+  <!-- TIMER -->
+  <div class="view" id="timer-view">
+    <div id="timer-content"></div>
+  </div>
+
+</div>
+
+<script>
+var blocks = [];
+var ts = null;
+
+var TEMPLATES = {
+  l60: [
+    {name:'Разминка',min:5},{name:'Проверка ДЗ',min:10},
+    {name:'Основная тема',min:25},{name:'Практика',min:12},
+    {name:'Рефлексия',min:5},{name:'Итог',min:3}
+  ],
+  l90: [
+    {name:'Разминка',min:5},{name:'Проверка ДЗ',min:10},
+    {name:'Основная тема',min:25},{name:'Практика',min:15},
+    {name:'Я знаю что делать',min:20},
+    {name:'Рефлексия',min:10},{name:'Итог',min:5}
+  ],
+  // Психология — классическая структура
+  pg45: [
+    {name:'Приветствие',min:5},
+    {name:'Разогрев',min:8},
+    {name:'Основная часть',min:22},
+    {name:'Рефлексия',min:7},
+    {name:'Ритуал прощания',min:3}
+  ],
+  pg90: [
+    {name:'Приветствие',min:7},
+    {name:'Разогрев',min:13},
+    {name:'Основная часть',min:45},
+    {name:'Рефлексия',min:18},
+    {name:'Ритуал прощания',min:7}
+  ],
+  pi50: [
+    {name:'Приветствие',min:5},
+    {name:'Разогрев',min:7},
+    {name:'Основная часть',min:28},
+    {name:'Рефлексия',min:7},
+    {name:'Ритуал прощания',min:3}
+  ]
+};
+
+function loadTemplate(k){ blocks = TEMPLATES[k].map(function(b){return {name:b.name,min:b.min};}); renderEditor(); }
+function showCat(cat){
+  var isL = cat==='lesson';
+  document.getElementById('tpl-lesson').style.display = isL?'':'none';
+  document.getElementById('tpl-psy').style.display = isL?'none':'';
+  document.getElementById('cat-lesson').classList.toggle('active', isL);
+  document.getElementById('cat-psy').classList.toggle('active', !isL);
+}
+function escHtml(s){ return s.replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;'); }
+
+function renderEditor(){
+  var list=document.getElementById('blocks-list'); list.innerHTML='';
+  blocks.forEach(function(b,i){
+    var row=document.createElement('div'); row.className='block-row';
+    row.innerHTML=
+      '<div class="row-idx">'+pad2(i+1)+'</div>'+
+      '<input type="text" value="'+escHtml(b.name)+'" placeholder="название блока" oninput="blocks['+i+'].name=this.value">'+
+      '<div class="dur-wrap"><input type="number" value="'+b.min+'" min="1" max="180" oninput="blocks['+i+'].min=+this.value;updateTotal()"><span class="dur-unit">МИН</span></div>'+
+      '<button class="del-btn" onclick="removeBlock('+i+')">×</button>';
+    list.appendChild(row);
+  });
+  updateTotal();
+}
+function pad2(n){ return n<10?'0'+n:''+n; }
+function addBlock(){ blocks.push({name:'',min:5}); renderEditor();
+  setTimeout(function(){var x=document.querySelectorAll('#blocks-list input[type="text"]');if(x.length)x[x.length-1].focus();},50); }
+function removeBlock(i){ blocks.splice(i,1); renderEditor(); }
+function updateTotal(){
+  var t=blocks.reduce(function(s,b){return s+(+b.min||0);},0);
+  document.getElementById('total-val').innerHTML=t+'<span class="u">мин</span>';
+}
+
+function showView(name){
+  document.querySelectorAll('.view').forEach(function(v){v.classList.remove('active');});
+  document.getElementById(name+'-view').classList.add('active');
+  document.getElementById('t-editor').classList.toggle('active', name==='editor');
+  document.getElementById('t-timer').classList.toggle('active', name==='timer');
+}
+
+function startTimer(){
+  if(!blocks.length){alert('Добавь блоки');return;}
+  if(blocks.some(function(b){return !b.min||b.min<1;})){alert('Проверь длительности');return;}
+  if(ts&&ts.interval)clearInterval(ts.interval);
+  ts={blockIdx:0,elapsed:0,paused:false,sessionElapsed:0,done:false,interval:null};
+  ts.interval=setInterval(tick,1000); renderTimer(); showView('timer');
+}
+function tick(){
+  if(!ts||ts.paused||ts.done)return;
+  ts.elapsed++; ts.sessionElapsed++;
+  var bs=blocks[ts.blockIdx].min*60;
+  if(ts.elapsed>=bs){
+    if(ts.blockIdx<blocks.length-1){ts.blockIdx++;ts.elapsed=0;}
+    else{ts.done=true;clearInterval(ts.interval);}
+  }
+  renderTimer();
+}
+function nextBlock(){ if(ts&&ts.blockIdx<blocks.length-1){ts.blockIdx++;ts.elapsed=0;renderTimer();} }
+function prevBlock(){ if(ts&&ts.blockIdx>0){ts.blockIdx--;ts.elapsed=0;renderTimer();} }
+function togglePause(){ if(ts){ts.paused=!ts.paused;renderTimer();} }
+function stopTimer(){ if(ts&&ts.interval)clearInterval(ts.interval); ts=null; showView('editor'); }
+
+function fmt(s){ return pad2(Math.floor(s/60))+':'+pad2(s%60); }
+
+function renderTimer(){
+  var c=document.getElementById('timer-content');
+  if(!ts){c.innerHTML='';return;}
+  if(ts.done){
+    var total=blocks.reduce(function(s,b){return s+b.min;},0);
+    c.className='';
+    c.innerHTML=
+      '<div class="done-screen">'+
+        '<div class="done-mark">[ ✓ ]</div>'+
+        '<div class="done-title">ЗАНЯТИЕ<br>ЗАВЕРШЕНО</div>'+
+        '<div class="done-sub">Время в работе <b>'+fmt(ts.sessionElapsed)+'</b> / план <b>'+total+' мин</b></div>'+
+        '<button class="done-btn" onclick="stopTimer()">← Вернуться к таймингу</button>'+
+      '</div>'+
+      footerStrip('DONE');
+    return;
+  }
+  var bi=ts.blockIdx, el=ts.elapsed;
+  var block=blocks[bi], bs=block.min*60, rem=bs-el, fill=(el/bs)*100;
+  var tc = rem<=60?'urgent':rem<=120?'warn':'';
+
+  var strip=blocks.map(function(b,i){
+    var cls=i<bi?'done':i===bi?'active':'';
+    var inner=i===bi?'<div class="ps-fill" style="width:'+fill+'%"></div>':'';
+    return '<div class="ps-seg '+cls+'" style="--w:'+b.min+'"><span class="ps-n">'+pad2(i+1)+'</span>'+inner+'</div>';
+  }).join('');
+
+  var queue=blocks.map(function(b,i){
+    if(i===bi)return '';
+    var cls=i<bi?'done-item':i===bi+1?'next':'';
+    var mark=i<bi?'✓':i===bi+1?'»':'·';
+    return '<div class="queue-item '+cls+'"><span class="qi-mark">'+mark+'</span><span class="qi-name">'+escHtml(b.name||'—')+'</span><span class="qi-dur">'+pad2(b.min)+' мин</span></div>';
+  }).join('');
+
+  c.className = 'layout-wide';
+  c.innerHTML=
+    '<div class="progress-strip">'+strip+'</div>'+
+    '<div class="timer-meta"><span>Сессия <b>'+fmt(ts.sessionElapsed)+'</b></span><span>'+(ts.paused?'⏸ ПАУЗА':'● ИДЁТ')+'</span></div>'+
+    '<div class="stage">'+
+      '<div class="stage-tag"><span class="br">[</span> блок '+pad2(bi+1)+' / '+pad2(blocks.length)+' <span class="br">]</span></div>'+
+      '<div class="stage-name">'+escHtml(block.name||'—')+'</div>'+
+      '<div class="clock-row">'+
+        '<div class="clock '+tc+'">'+fmt(rem)+'</div>'+
+        '<div class="clock-side"><span class="of">из<b>'+pad2(block.min)+':00</b></span></div>'+
+      '</div>'+
+    '</div>'+
+    '<div class="controls">'+
+      '<button class="ctrl-btn" onclick="prevBlock()"'+(bi===0?' disabled':'')+'>← Пред</button>'+
+      '<button class="ctrl-btn primary" onclick="togglePause()">'+(ts.paused?'▶ Продолжить':'⏸ Пауза')+'</button>'+
+      '<button class="ctrl-btn" onclick="nextBlock()"'+(bi===blocks.length-1?' disabled':'')+'>След →</button>'+
+    '</div>'+
+    '<div class="queue-head">Очередь<span class="rule"></span></div>'+
+    '<div class="queue">'+queue+'</div>'+
+    '<div class="stop-wrap" style="padding:0 18px 14px;"><button class="ctrl-btn" style="width:100%;border:1.5px solid var(--ink);" onclick="stopTimer()">■ Стоп · Назад к таймингу</button></div>'+
+    footerStrip('RUN');
+}
+
+function footerStrip(tag){
+  return '<div class="footer-strip"><span>SHRIMP-GRID / '+tag+'</span><div class="barcode">'+barcode()+'</div></div>';
+}
+function barcode(){
+  var s='';
+  for(var i=0;i<42;i++){ s+='<span style="width:'+(Math.random()>.5?2:1)+'px"></span>'; }
+  return s;
+}
+
+// live clock
+function updateLive(){
+  var d=new Date();
+  document.getElementById('live-clock').textContent=pad2(d.getHours())+':'+pad2(d.getMinutes());
+  var months=['ЯНВ','ФЕВ','МАР','АПР','МАЙ','ИЮН','ИЮЛ','АВГ','СЕН','ОКТ','НОЯ','ДЕК'];
+  document.getElementById('live-date').textContent=pad2(d.getDate())+' '+months[d.getMonth()]+' '+d.getFullYear();
+}
+
+document.getElementById('barcode1').innerHTML=barcode();
+updateLive(); setInterval(updateLive,10000);
+loadTemplate('l60');
+
+// PWA service worker (only works over http/https, e.g. GitHub Pages)
+if('serviceWorker' in navigator && location.protocol.indexOf('http')===0){
+  window.addEventListener('load',function(){
+    navigator.serviceWorker.register('./sw.js').catch(function(){});
+  });
+}
+</script>
+</body>
+</html>
